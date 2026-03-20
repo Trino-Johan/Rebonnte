@@ -18,9 +18,5 @@ jobs:
       - name: Install dependencies
         run: xcodebuild -resolvePackageDependencies
 
-      - name: Build and Test
-        run: |
-          xcodebuild clean build \\
-            -scheme MediStock \\
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \\
-            -quiet
+      - name: Build
+        run: xcodebuild clean build -scheme MediStock -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' -quiet
