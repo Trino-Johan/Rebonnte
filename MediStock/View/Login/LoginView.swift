@@ -6,30 +6,54 @@ struct LoginView: View {
     @EnvironmentObject var session: SessionStore
 
     var body: some View {
-        VStack {
-            TextField("Email", text: $email)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding()
-            SecureField("Password", text: $password)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding()
-            Button(action: {
-                session.signIn(email: email, password: password)
-            }) {
-                Text("Login")
-            }
-            Button(action: {
-                session.signUp(email: email, password: password)
-            }) {
-                Text("Sign Up")
-            }
-        }
-        .padding()
-    }
-}
+        NavigationView {
+            ZStack {
+                Color(.systemBackground).ignoresSafeArea()
+                
+                VStack(spacing: 30) {
+                    Image(systemName: "pills.circle.fill")
+                        .font(.system(size: 80))
+                        .foregroundColor(.blue)
+                        .accessibilityHidden(true)
 
-struct LoginView_Previews: PreviewProvider {
-    static var previews: some View {
-        LoginView().environmentObject(SessionStore())
+                    VStack(spacing: 15) {
+                        TextField("Email", text: $email)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .autocapitalization(.none)
+                            .accessibilityLabel("Email de connexion")
+                        
+                        SecureField("Mot de passe", text: $password)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .accessibilityLabel("Mot de passe de connexion")
+                    }
+                    .padding(.horizontal)
+
+                    VStack(spacing: 20) {
+                        Button(action: {
+                            session.signIn(email: email, password: password)
+                        }) {
+                            Text("Se connecter")
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                        }
+                        
+                        // Navigation vers la création de compte
+                        NavigationLink(destination: SignUpView()) {
+                            Text("Pas encore de compte ? **S'inscrire**")
+                                .foregroundColor(.blue)
+                        }
+                        .accessibilityLabel("Aller à l'écran de création de compte")
+                    }
+                    .padding(.horizontal)
+                    
+                    Spacer()
+                }
+                .padding(.top, 40)
+            }
+            .navigationBarHidden(true)
+        }
     }
 }

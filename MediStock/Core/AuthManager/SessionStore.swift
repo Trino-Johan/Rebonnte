@@ -7,10 +7,12 @@ class SessionStore: ObservableObject {
 
     func listen() {
         handle = Auth.auth().addStateDidChangeListener { (auth, user) in
-            if let user = user {
-                self.session = User(uid: user.uid, email: user.email)
-            } else {
-                self.session = nil
+            DispatchQueue.main.async {
+                if let user = user {
+                    self.session = User(uid: user.uid, email: user.email)
+                } else {
+                    self.session = nil
+                }
             }
         }
     }
@@ -18,9 +20,12 @@ class SessionStore: ObservableObject {
     func signUp(email: String, password: String) {
         Auth.auth().createUser(withEmail: email, password: password) { (result, error) in
             if let error = error {
-                print("Error creating user: \(error.localizedDescription) \(error)")
+                print("Error creating user: \(error.localizedDescription)")
             } else {
-                self.session = User(uid: result?.user.uid ?? "", email: result?.user.email ?? "")
+                // Retour sur le thread principal pour l'UI
+                DispatchQueue.main.async {
+                    self.session = User(uid: result?.user.uid ?? "", email: result?.user.email ?? "")
+                }
             }
         }
     }
@@ -30,7 +35,9 @@ class SessionStore: ObservableObject {
             if let error = error {
                 print("Error signing in: \(error.localizedDescription)")
             } else {
-                self.session = User(uid: result?.user.uid ?? "", email: result?.user.email ?? "")
+                DispatchQueue.main.async {
+                    self.session = User(uid: result?.user.uid ?? "", email: result?.user.email ?? "")
+                }
             }
         }
     }

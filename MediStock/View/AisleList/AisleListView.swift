@@ -1,32 +1,48 @@
 import SwiftUI
 
 struct AisleListView: View {
-    @ObservedObject var viewModel = MedicineStockViewModel()
+    @StateObject var viewModel = MedicineStockViewModel()
+    @EnvironmentObject var session: SessionStore
+    @State private var showAddSheet = false
 
     var body: some View {
         NavigationView {
-            List {
-                ForEach(viewModel.aisles, id: \.self) { aisle in
-                    NavigationLink(destination: MedicineListView(aisle: aisle)) {
-                        Text(aisle)
+            ZStack {
+                Color(.systemGroupedBackground).ignoresSafeArea()
+                
+                List {
+                    ForEach(viewModel.aisles, id: \.self) { aisle in
+                        NavigationLink(destination: MedicineListView(viewModel: viewModel, aisle: aisle)) {
+                            Text(aisle)
+                                .font(.body)
+                        }
+                        .accessibilityLabel("Rayon \(aisle)")
+                        .accessibilityHint("Affiche la liste des médicaments dans ce rayon")
                     }
                 }
+                .listStyle(InsetGroupedListStyle())
+                .navigationBarTitle("Rayons")
+                .navigationBarItems(
+                    leading: Button(action: { session.signOut() }) {
+                        Text("Déconnexion").foregroundColor(.red)
+                    }
+                    .accessibilityLabel("Se déconnecter")
+                    .accessibilityHint("Ferme votre session actuelle"),
+                    
+                    trailing: Button(action: { showAddSheet = true }) {
+                        Image(systemName: "plus.circle.fill").font(.title3)
+                    }
+                    .accessibilityLabel("Ajouter un médicament")
+                )
+                
+                if viewModel.isLoading {
+                    ProgressView().padding().background(Color(.tertiarySystemBackground)).cornerRadius(10)
+                }
             }
-            .navigationBarTitle("Aisles")
-            .navigationBarItems(trailing: Button(action: {
-                viewModel.addRandomMedicine(user: "test_user") // Remplacez par l'utilisateur actuel
-            }) {
-                Image(systemName: "plus")
-            })
         }
-        .onAppear {
-            viewModel.fetchAisles()
+        .sheet(isPresented: $showAddSheet) {
+            AddMedicineView(viewModel: viewModel)
         }
-    }
-}
-
-struct AisleListView_Previews: PreviewProvider {
-    static var previews: some View {
-        AisleListView()
+        .onAppear { viewModel.fetchAisles() }
     }
 }

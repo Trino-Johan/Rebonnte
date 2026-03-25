@@ -1,89 +1,111 @@
 import SwiftUI
 
 struct AllMedicinesView: View {
-    @ObservedObject var viewModel = MedicineStockViewModel()
+    @StateObject var viewModel = MedicineStockViewModel()
+    @EnvironmentObject var session: SessionStore
     @State private var filterText: String = ""
-    @State private var sortOption: SortOption = .none
-
+    @State private var showAddSheet = false
+    
     var body: some View {
         NavigationView {
-            VStack {
-                // Filtrage et Tri
-                HStack {
-                    TextField("Filter by name", text: $filterText)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .padding(.leading, 10)
-                    
-                    Spacer()
-
-                    Picker("Sort by", selection: $sortOption) {
-                        Text("None").tag(SortOption.none)
-                        Text("Name").tag(SortOption.name)
-                        Text("Stock").tag(SortOption.stock)
-                    }
-                    .pickerStyle(MenuPickerStyle())
-                    .padding(.trailing, 10)
-                }
-                .padding(.top, 10)
+            ZStack {
+                // couleur de fond sémantique pour tout l'écran
+                Color(.systemGroupedBackground)
+                    .ignoresSafeArea()
                 
-                // Liste des Médicaments
-                List {
-                    ForEach(filteredAndSortedMedicines, id: \.id) { medicine in
-                        NavigationLink(destination: MedicineDetailView(medicine: medicine, viewModel: viewModel)) {
-                            VStack(alignment: .leading) {
-                                Text(medicine.name)
-                                    .font(.headline)
-                                Text("Stock: \(medicine.stock)")
-                                    .font(.subheadline)
+                VStack(spacing: 0) {
+                    // Section de recherche optimisée pour le Dark Mode
+                    searchBarSection
+                    
+                    // Liste des Médicaments
+                    List {
+                        ForEach(filteredMedicines) { medicine in
+                            if let index = viewModel.medicines.firstIndex(where: { $0.id == medicine.id }) {
+                                NavigationLink(destination: MedicineDetailView(medicine: $viewModel.medicines[index], viewModel: viewModel)) {
+                                    medicineRow(medicine: medicine)
+                                }
                             }
                         }
+                        .onDelete(perform: removeRows)
                     }
+                    .listStyle(InsetGroupedListStyle()) // Style natif iOS
                 }
                 .navigationBarTitle("All Medicines")
-                .navigationBarItems(trailing: Button(action: {
-                    viewModel.addRandomMedicine(user: "test_user") // Remplacez par l'utilisateur actuel
-                }) {
-                    Image(systemName: "plus")
-                })
+                .navigationBarItems(trailing: addButton)
+                
+                // Indicateur de chargement adaptatif
+                if viewModel.isLoading {
+                    loadingOverlay
+                }
             }
+        }
+        .sheet(isPresented: $showAddSheet) {
+            AddMedicineView(viewModel: viewModel)
         }
         .onAppear {
             viewModel.fetchMedicines()
         }
     }
+}
+
+// MARK: - Subviews & Logic
+extension AllMedicinesView {
     
-    var filteredAndSortedMedicines: [Medicine] {
-        var medicines = viewModel.medicines
-
-        // Filtrage
-        if !filterText.isEmpty {
-            medicines = medicines.filter { $0.name.lowercased().contains(filterText.lowercased()) }
+    private var searchBarSection: some View {
+        HStack {
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(.secondary)
+            TextField("Rechercher par nom...", text: $filterText)
+                .textFieldStyle(PlainTextFieldStyle())
         }
-
-        // Tri
-        switch sortOption {
-        case .name:
-            medicines.sort { $0.name.lowercased() < $1.name.lowercased() }
-        case .stock:
-            medicines.sort { $0.stock < $1.stock }
-        case .none:
-            break
-        }
-
-        return medicines
+        .padding(10)
+        .background(Color(.secondarySystemBackground)) // Couleur adaptative
+        .cornerRadius(10)
+        .padding()
+        .background(Color(.systemGroupedBackground))
     }
-}
-
-enum SortOption: String, CaseIterable, Identifiable {
-    case none
-    case name
-    case stock
-
-    var id: String { self.rawValue }
-}
-
-struct AllMedicinesView_Previews: PreviewProvider {
-    static var previews: some View {
-        AllMedicinesView()
+    
+    private func medicineRow(medicine: Medicine) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(medicine.name)
+                .font(.headline)
+                .foregroundColor(.primary) // Blanc en mode sombre, noir en mode clair
+            Text("Stock: \(medicine.stock)")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+    }
+    
+    private var addButton: some View {
+        Button(action: { showAddSheet = true }) {
+            Image(systemName: "plus.circle.fill")
+                .font(.title2)
+        }
+        .accessibilityLabel("Ajouter un médicament")
+    }
+    
+    private var loadingOverlay: some View {
+        ProgressView("Chargement...")
+            .padding()
+            .background(Color(.tertiarySystemBackground)) // Fond contrasté en mode sombre
+            .cornerRadius(12)
+            .shadow(radius: 10)
+    }
+    
+    var filteredMedicines: [Medicine] {
+        if filterText.isEmpty {
+            return viewModel.medicines
+        } else {
+            return viewModel.medicines.filter {
+                $0.name.lowercased().contains(filterText.lowercased())
+            }
+        }
+    }
+    
+    private func removeRows(at offsets: IndexSet) {
+        offsets.forEach { index in
+            let medicineToDelete = filteredMedicines[index]
+            viewModel.deleteMedicine(medicineToDelete, userEmail: session.session?.email ?? "Inconnu")
+        }
     }
 }
