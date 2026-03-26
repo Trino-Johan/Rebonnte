@@ -7,7 +7,7 @@ on:
     branches: [ main, master ]
 
 jobs:
-  build:
+  build-and-test:
     name: Build and Test
     runs-on: macos-15
 
@@ -17,6 +17,19 @@ jobs:
 
       - name: Install dependencies
         run: xcodebuild -resolvePackageDependencies
+        
+      - name: Build and Run Tests
+        run: |
+          xcodebuild clean test \
+            -scheme MediStock \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -quiet \
+            -resultBundlePath TestResults.xcresult
 
-      - name: Build
-        run: xcodebuild clean build -scheme MediStock -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' -quiet
+      # Upload des résultats en cas d'échec pour débugger
+      - name: Upload Test Results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults.xcresult
