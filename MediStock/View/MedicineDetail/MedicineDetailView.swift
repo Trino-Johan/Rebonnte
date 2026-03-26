@@ -75,7 +75,7 @@ extension MedicineDetailView {
             ForEach(viewModel.history.sorted(by: { $0.timestamp > $1.timestamp })) { entry in
                 VStack(alignment: .leading) {
                     Text(entry.action).bold()
-                    Text("Par: \(entry.user ?? "Inconnu")").font(.caption)
+                    Text("Par : \(entry.user)").font(.caption)
                     Text(entry.timestamp.formatted()).font(.caption2)
                     Text(entry.details).font(.footnote).italic()
                 }
