@@ -50,7 +50,6 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		48E3118C2F6CBA1800704C87 /* MediStock */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = MediStock; sourceTree = "<group>"; };
 		48E3119C2F6CBA1E00704C87 /* MediStockTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = MediStockTests; sourceTree = "<group>"; };
-		48E311A02F6CBA2000704C87 /* MediStockUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = MediStockUITests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,7 +94,6 @@
 				48E3117B2F6CB82A00704C87 /* AppDelegate.swift */,
 				48E3118C2F6CBA1800704C87 /* MediStock */,
 				48E3119C2F6CBA1E00704C87 /* MediStockTests */,
-				48E311A02F6CBA2000704C87 /* MediStockUITests */,
 				53E0D8942C06084700DE1134 /* Products */,
 				48E311792F6CB7E500704C87 /* GoogleService-Info.plist */,
 			);
@@ -180,9 +178,6 @@
 			);
 			dependencies = (
 				53E0D8AF2C06084900DE1134 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				48E311A02F6CBA2000704C87 /* MediStockUITests */,
 			);
 			name = MediStockUITests;
 			productName = MediStockUITests;
