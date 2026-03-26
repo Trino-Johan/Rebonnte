@@ -6,7 +6,8 @@ class SessionStore: ObservableObject {
     var handle: AuthStateDidChangeListenerHandle?
 
     func listen() {
-        handle = Auth.auth().addStateDidChangeListener { (auth, user) in
+        handle = Auth.auth().addStateDidChangeListener { [weak self] (auth, user) in
+            guard let self = self else { return }
             DispatchQueue.main.async {
                 if let user = user {
                     self.session = User(uid: user.uid, email: user.email)
@@ -18,11 +19,13 @@ class SessionStore: ObservableObject {
     }
 
     func signUp(email: String, password: String) {
-        Auth.auth().createUser(withEmail: email, password: password) { (result, error) in
+        // Ajout de [weak self] pour éviter de retenir le Store en mémoire inutilement
+        Auth.auth().createUser(withEmail: email, password: password) { [weak self] (result, error) in
+            guard let self = self else { return }
+            
             if let error = error {
                 print("Error creating user: \(error.localizedDescription)")
             } else {
-                // Retour sur le thread principal pour l'UI
                 DispatchQueue.main.async {
                     self.session = User(uid: result?.user.uid ?? "", email: result?.user.email ?? "")
                 }
@@ -31,7 +34,10 @@ class SessionStore: ObservableObject {
     }
 
     func signIn(email: String, password: String) {
-        Auth.auth().signIn(withEmail: email, password: password) { (result, error) in
+        // Ajout de [weak self] ici également
+        Auth.auth().signIn(withEmail: email, password: password) { [weak self] (result, error) in
+            guard let self = self else { return }
+            
             if let error = error {
                 print("Error signing in: \(error.localizedDescription)")
             } else {

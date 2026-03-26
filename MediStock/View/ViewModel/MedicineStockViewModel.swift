@@ -12,7 +12,9 @@ class MedicineStockViewModel: ObservableObject {
     func fetchMedicines() {
         self.isLoading = true
         
-        db.collection("medicines").order(by: "name").addSnapshotListener { (querySnapshot, error) in
+        db.collection("medicines").order(by: "name").addSnapshotListener { [weak self] (querySnapshot, error) in
+            guard let self = self else { return }
+            
             DispatchQueue.main.async {
                 self.isLoading = false
                 if let error = error {
@@ -27,7 +29,9 @@ class MedicineStockViewModel: ObservableObject {
     }
     
     func fetchAisles() {
-        db.collection("medicines").addSnapshotListener { (querySnapshot, error) in
+        db.collection("medicines").addSnapshotListener { [weak self] (querySnapshot, error) in
+            guard let self = self else { return }
+            
             if let error = error {
                 print("Error getting aisles: \(error)")
             } else {
@@ -57,7 +61,9 @@ class MedicineStockViewModel: ObservableObject {
     
     func deleteMedicine(_ medicine: Medicine, userEmail: String) {
         guard let id = medicine.id else { return }
-        db.collection("medicines").document(id).delete { error in
+        // Ajout de [weak self] pour la suppression
+        db.collection("medicines").document(id).delete { [weak self] error in
+            guard let self = self else { return }
             if let error = error {
                 print("Erreur suppression : \(error.localizedDescription)")
             } else {
@@ -78,7 +84,9 @@ class MedicineStockViewModel: ObservableObject {
         guard let id = medicine.id else { return }
         let newStock = medicine.stock + amount
         
-        db.collection("medicines").document(id).updateData(["stock": newStock]) { error in
+        db.collection("medicines").document(id).updateData(["stock": newStock]) { [weak self] error in
+            guard let self = self else { return }
+            
             if let error = error {
                 print("Erreur stock: \(error.localizedDescription)")
             } else {
@@ -112,7 +120,10 @@ class MedicineStockViewModel: ObservableObject {
 
     func fetchHistory(for medicine: Medicine) {
         guard let medicineId = medicine.id else { return }
-        db.collection("history").whereField("medicineId", isEqualTo: medicineId).addSnapshotListener { (snapshot, _) in
+        // Ajout de [weak self] pour l'historique
+        db.collection("history").whereField("medicineId", isEqualTo: medicineId).addSnapshotListener { [weak self] (snapshot, _) in
+            guard let self = self else { return }
+            
             let fetched = snapshot?.documents.compactMap { try? $0.data(as: HistoryEntry.self) } ?? []
             DispatchQueue.main.async { self.history = fetched }
         }
